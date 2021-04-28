@@ -1,5 +1,5 @@
 %% Add required paths
-% Adjust CasADi and qpOASES path!
+% Adjust CasADi and qpOASES path to your local settings:
 addpath("~/Documents/MATLAB/casadi-linux-matlabR2014b-v3.5.5");
 addpath("~/Documents/qpOASES/3.2/interfaces/matlab");
 
@@ -15,17 +15,22 @@ addpath("Collocation");
 % 3: IPOPT Penalty
 % 4: IPOPT Smoothed
 % 5: IPOPT Relaxed
-mpcc_modes = 2; %[2 3 4 5];
+mpcc_modes = [2 3 4 5];
+
+% In order to compare the sparse schur method against the dense method with
+% sparse matrices it is recommended to adjust the experiment name below to
+% <expname>/schur. This behavior is supported in the creation of
+% performance plots.
 
 % Number of initializations tested
 nxsamples = 100;
 
 % Number of discretization nodes (scales the IVOCP)
-N_vals = 50:155:150;
+N_vals = 50:5:150;
 
 % Experiment name and output directory
-expname = "test";
-outdir = "saved_variables/" + expname;
+expname = "experiment";
+outdir = "saved_variables/" + expname + "/";
 
 % Create output directory if it doesn't exist
 if ~exist(outdir, 'dir')
@@ -38,6 +43,8 @@ sigma_vals = [1e-1 5e-2 1e-2 5e-3 1e-3];
 
 for i = 1:length(N_vals)
     for j = 1:length(mpcc_modes)
+        fprintf("Running [mode = %d, N = %d]\n", mpcc_modes(j), N_vals(i));
+        
         if (mpcc_modes(j) == 4 || mpcc_modes(j) == 5)
             % Regularization
             IVOCP(mpcc_modes(j), sigma_vals, nxsamples, N_vals(i), outdir);
@@ -45,10 +52,8 @@ for i = 1:length(N_vals)
             % Penaltization
             IVOCP(mpcc_modes(j), rho_vals, nxsamples, N_vals(i), outdir);                
         end
-
-        fprintf("i = %d | j = %d\n", i, j);
     end
 end
 
-% Generate output
-IVOCP_Performance_Plots(outdir);
+%% Generate output
+CreatePerformancePlots(outdir);
