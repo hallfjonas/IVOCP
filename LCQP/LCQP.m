@@ -144,13 +144,10 @@ fVals = [];
 dualSteps = [];
 
 %% Initiate qpOASES homotopy
-d_old = grad_phi(xk);
-
 if (solveZeroPenaltyFirst)
-    QP = qpOASES_sequence('i', Q, g, A, lb, ub, lbA, ubA, options, params.x0);
-    [xk,~,exitflag,iterQPO,lk,auxOutput] = qpOASES_sequence('h', QP, g + Rk*d_old, lb, ub, lbA, ubA, options);     
+    [QP,xk,~,exitflag,iterQPO,lk,auxOutput] = qpOASES_sequence('i', Q, g, A, lb, ub, lbA, ubA, options, params.x0);
 else
-    [QP,xk,~,exitflag,iterQPO,lk,auxOutput] = qpOASES_sequence('i', Q, g + Rk*d_old, A, lb, ub, lbA, ubA, options);
+    [QP,xk,~,exitflag,iterQPO,lk,auxOutput] = qpOASES_sequence('i', Q, g + Rk*grad_phi(xk), A, lb, ub, lbA, ubA, options);
 end
     
 if (exitflag ~= 0)
@@ -192,8 +189,7 @@ while ( true )
     % Iteration stats
     if (printStats)
         compl = abs(phi(xk));
-        isFeasible = PrimalDualFeasibilitySequence(lb, ub, lbA, ubA, A*xk, xk, lam_xk, lam_gk, options.terminationTolerance);
-        PrintStats(k, i, stat, compl, Rk, alpha, merit_fun(xk, Rk), isFeasible, norm(pk), iterQPO);
+        PrintStats(k, i, stat, compl, Rk, alpha, merit_fun(xk, Rk), norm(pk), iterQPO);
     end
     
     % Need this alternative stationarity check due to qpOASES termination
