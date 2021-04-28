@@ -260,7 +260,7 @@ if (mpcc_mode == 1 || mpcc_mode == 2)
     params.solveZeroPenaltyFirst = true;
     params.penaltyUpdater = @(R) rho_vals(3)/rho_vals(2)*R;
     params.maxIter = 1000;
-    params.printStats = true;
+    params.printStats = false;
     params.Rbreak = rho_vals(end);
     
     if (mpcc_mode == 2)
