@@ -42,7 +42,7 @@ sigma = MX.sym('sigma');
 regTerm = eps;
 
 % State/Algebraic dimensions
-nx = length(x,1);
+nx = length(x);
 nz = length(z);
 
 % State and algebraic state bounds
@@ -79,6 +79,9 @@ z0 = [0; 1; 1];
 % "Lift" initial conditions
 Xk = MX.sym('X0', nx);
 w = {w{:}, Xk};
+
+% Add regularization term to lifted variable
+J = J + regTerm*(Xk'*Xk);
 
 % Add bounds for lifted variable
 lbw = [lbw; -inf];
@@ -203,10 +206,10 @@ for k=0:N-1
     ubg = [ubg; 0; 0];
 
     % Add contribution to the end state
-    Xk_end = Xk_end + D(j+1)*Xkj;
+    Xk_end = Xk_end + D(2)*Xkj;
 
     % Add contribution to quadrature function
-    J = J + B(j+1)*fq*h;
+    J = J + B(2)*fq*h;
 
     % Add regularization term to algebraic variables
     J = J + regTerm*(Zkj'*Zkj);
@@ -281,43 +284,29 @@ xx = linspace(-1.9,-0.9,nxsamples)';
 C = [S1; S2]'*[S2; S1];
 
 for i = 1:nxsamples 
+    % Obtain initial guess for states from different forward simulations
     initGuess = BuildInitialGuessEuler(@(x) 2 - sign(x), xx(i), h, N+1);    
-    if (useDenseMethod)
-        x0(ind_x) = initGuess;
-    else
-        x0(ind_x(1:2:end)) = initGuess;
-        x0(ind_x(2:2:end)) = initGuess(2:end);
-    end
-    x0(ind_x(1)) = xx(i);
-    params.x0 = x0;
-    
-    auxInput = qpOASES_auxInput;
-    auxInput.hessianType = 5;
-
-    % Keep degree of freedom (uncomment to fix first state)
-    if (~x0_free)
-        lbx(ind_x(1)) = xx(i);
-        ubx(ind_x(1)) = xx(i);
-    end
-    
-    if (mpcc_mode > 1 && mpcc_mode < 5)
-        % Reset solver
-        prob = struct('f', J, 'x', x, 'g', constr, 'p', sigma);
-        solver = nlpsol('solver', 'ipopt', prob, opts_ipopt);
-    end
-    
+    w0(ind_x) = initGuess;
+    params.x0 = w0;
+            
     if (mpcc_mode == 1 || mpcc_mode == 2)
         % Solve using LCQP
         tic;
-        w_opt = LCQP(Q, g, A, lbx, ubx, lbg, ubg, S1, S2, params);
+        w_opt = LCQP(Q, g, A, lbw, ubw, lbg, ubg, S1, S2, params);
         time_vals(i) = toc;
     else
         % Solve using IPOPT
+        
+        % Reset solver
+        prob = struct('f', J, 'x', x, 'g', constr, 'p', sigma);
+        solver = nlpsol('solver', 'ipopt', prob, opts_ipopt);
+        
+        % Go through homotopy
         for j = 1:length(rho_vals)        
             sigma_val = rho_vals(j);
             
             tic;
-            sol = solver('x0', params.x0, 'lbx', lbx, 'ubx', ubx,...
+            sol = solver('x0', params.x0, 'lbx', lbw, 'ubx', ubw,...
                          'lbg', lbg, 'ubg', ubg, 'p', sigma_val);
             time_vals(i) = time_vals(i) + toc;  
             w_opt = full(sol.x);  
