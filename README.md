@@ -18,4 +18,4 @@ If you want to make use of sparse solution variant within qpOASES you must compi
 ## CODE Outline
 - A MATLAB implementation of the LCQP algorithm is given in the directory `LCQP`.
 - The script `RunBenchmark.m` can be used to run the benchmark.
-- Afterwards, the script `IVOCP_Performance_Plot.m` can be used to create performance plots regarding time and solution quality.
+- Afterwards, the script `CreatePerformancePlots.m` can be used to create performance plots regarding time and solution quality.
