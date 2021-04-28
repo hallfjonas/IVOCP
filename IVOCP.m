@@ -99,22 +99,18 @@ ind_total = ind_x;
 NX = nx + N*(nx + nz);
 NCOMP = N*2;
 
-% Initialize complementarity matrices
-if (mpcc_mode == 1 || mpcc_mode == 2)
-    % Use LCQP, i.e. we require complementarity matrices
-    S1 = zeros(NCOMP, NX);
-    S2 = zeros(NCOMP, NX);
-    compCounter = 1;
-elseif (mpcc_mode == 4)
-    % Smoothed strategy
+% LCQP requires complementarity matrices
+S1 = zeros(NCOMP, NX);
+S2 = zeros(NCOMP, NX);
+compCounter = 1;
+
+% Smoothed/Relaxed strategy require adjusted algebraic bounds
+if (mpcc_mode == 4)
     lbComp = ones(2,1);
     ubComp = ones(2,1);
 elseif (mpcc_mode == 5)
-    % Relaxed strategy
     lbComp = -inf(2,1);
     ubComp = ones(2,1);
-else
-    error("Invalid mpcc_mode passed\n");
 end
 
 %% Formulate the NLP
@@ -141,6 +137,23 @@ for k=0:N-1
     ind_z = [ind_z, newComplementarities];
     ind_total  = [ind_total,newComplementarities];
     
+    % Build complementarity matrices (required for easy compl. evaluation)
+    % Get new indices
+    yInd = newComplementarities(1);
+    lam0Ind = newComplementarities(2);
+    lInd = newComplementarities(3);
+    xInd = newStates(1);
+
+    % y*lambda0
+    S1(compCounter, yInd) = 1;
+    S2(compCounter, lam0Ind) = 1;
+    compCounter = compCounter + 1;
+
+    % (1-y)*lambda1
+    S1(compCounter, lInd) = 1;
+    S2(compCounter, [xInd, lam0Ind]) = [1, 1];
+    compCounter = compCounter + 1;
+    
     % Collocation equation
     Xk_end = D(1)*Xk;
     xp = C(1,2)*Xk + C(2,2)*Xkj;
@@ -154,23 +167,6 @@ for k=0:N-1
     if (mpcc_mode == 1 || mpcc_mode == 2)
         % Lambda1 is dependent on mpcc strategy:
         lam1 = Xkj + lam0;
-        
-        % Build complementarity matrices
-        % Get new indices
-        yInd = newComplementarities(1);
-        lam0Ind = newComplementarities(2);
-        lInd = newComplementarities(3);
-        xInd = newStates(1);
-
-        % y*lambda0
-        S1(compCounter, yInd) = 1;
-        S2(compCounter, lam0Ind) = 1;
-        compCounter = compCounter + 1;
-
-        % (1-y)*lambda1
-        S1(compCounter, lInd) = 1;
-        S2(compCounter, [xInd, lam0Ind]) = [1, 1];
-        compCounter = compCounter + 1;
     elseif (mpcc_mode == 3)
         % IPOPT Penalty
         % Lambda1 is dependent on mpcc strategy:
@@ -186,17 +182,25 @@ for k=0:N-1
         
         % Add smoothing/relaxation terms to constraints
         gj = [ y*lam0; ...
-               l*lam1];
+               (1-y)*lam1];
         g = {g{:}, gj};
         lbg = [lbg; lbComp];
         ubg = [ubg; ubComp];     
     end
     
-    % Linear constraints on algbraic vars: lambda1 >= 0 and l = 1 - y
-    g = {g{:}, lam1, l - (1 - y)};
-    lbg = [lbg; 0; 0];
-    ubg = [ubg; inf; 0];
-        
+    % Linear constraints on algbraic vars
+    % 1) Positivity of lambda1:
+    g = {g{:}, lam1};
+    lbg = [lbg; 0];
+    ubg = [ubg; inf];
+    
+    % 2) In smoothing the following would lead to overconstrainedness.
+    if (mpcc_mode ~= 4)
+        g = {g{:}, l - (1 - y)};
+        lbg = [lbg; 0];
+        ubg = [ubg; 0];
+    end
+
     % ODE and objective
     [fx, fq, fz] = F(Xkj, Zkj);
 
@@ -256,7 +260,7 @@ if (mpcc_mode == 1 || mpcc_mode == 2)
     params.solveZeroPenaltyFirst = true;
     params.penaltyUpdater = @(R) rho_vals(3)/rho_vals(2)*R;
     params.maxIter = 1000;
-    params.printStats = false;
+    params.printStats = true;
     params.Rbreak = rho_vals(end);
     
     if (mpcc_mode == 2)
@@ -326,7 +330,7 @@ end
 if (mpcc_mode == 1)
     algo = "LCQP";
 elseif (mpcc_mode == 2)
-    algo = "LCQP_Schur";
+    algo = "LCQP_Sparse";
 elseif (mpcc_mode == 3)
     algo = "nlp_pen";
 elseif (mpcc_mode == 4)
@@ -335,7 +339,7 @@ elseif (mpcc_mode == 5)
     algo = "relaxed";
 end
 
-savefile = outdir + algo + "_" + "_" + N + "_vars.mat";
+savefile = outdir + algo + "_" + N + "_vars.mat";
 save(savefile, 'xx', 'obj_originals', 'w_opt_vec', 'compl_vals', 'ind_x', 'ind_z', 'N', 'h', 'time_vals', 'rho_vals', 'nxsamples');
 
 end
