@@ -90,10 +90,15 @@ set(groot,'defaultLegendInterpreter','latex');
 % linetypes = {'-', '--', '-', '--','-.', ':', ':'};
 
 % Fixed chosen colors and markers
-%colors = ['k', 'r', 'b', 'm', 'y', 'g'];
-colors = distinguishable_colors(5);
-markers = {'d','x','s','>', 'o', '+'};
-linetypes = {'-', '--', ':', '-.','-.', '--'};
+colors = zeros(5, 3);
+colors(1,:) = [0, 0, 0];
+colors(2,:) = [0.1, 0.7, 0.1];
+colors(3,:) = [0, 0, 1];
+colors(4,:) = [0.9, 0.9, 0];
+colors(5,:) = [1, 0, 0];
+
+markers = {'s','d','x','>', 'o', '+'};
+linetypes = {'--', '-', ':', '-.','-.', '--'};
 
 %% Compute Analytic Solution for comparison
 x = linspace(-1.9,-0.9,1000);
@@ -158,7 +163,7 @@ end
 % Styling
 legend("Location", "southeast");
 xlabel("Number of discretization nodes");
-ylabel("Average CPU time $[s]$");
+ylabel("Average CPU time $[\mathrm{s}]$");
 grid on;
 lines = findobj(gcf,"Type","Line");
 for i = 1:numel(lines)
