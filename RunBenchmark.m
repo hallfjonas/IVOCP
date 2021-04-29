@@ -28,7 +28,7 @@ mpcc_modes = [2 3 4 5];
 nxsamples = 100;
 
 % Number of discretization nodes (scales the IVOCP)
-N_vals = 50:5:200;
+N_vals = 50:5:150;
 
 % Experiment name and output directory
 expname = "experiment";
