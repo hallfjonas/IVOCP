@@ -38,7 +38,7 @@ z = [y,lambda0,l];
 % Relaxation parameter
 sigma = MX.sym('sigma');
 
-% Regularization factor (only required on algebraic variables)
+% Regularization factor
 regTerm = eps;
 
 % State/Algebraic dimensions
