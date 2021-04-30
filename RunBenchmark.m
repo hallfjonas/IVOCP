@@ -58,5 +58,5 @@ for i = 1:length(N_vals)
 end
 
 %% Generate output
-close all; clear all; clc;
+close all;
 CreatePerformancePlots(outdir);
