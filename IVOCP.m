@@ -80,9 +80,6 @@ z0 = [0; 1; 1];
 Xk = MX.sym('X0', nx);
 w = {w{:}, Xk};
 
-% Add regularization term to lifted variable
-J = J + regTerm*(Xk'*Xk);
-
 % Add bounds for lifted variable
 lbw = [lbw; -inf];
 ubw = [ubw; inf];
@@ -202,7 +199,7 @@ for k=0:N-1
     end
 
     % ODE and objective
-    [fx, fq, fz] = F(Xkj, Zkj);
+    [fx, fq, fz] = F(Xk, Zkj);
 
     % collect discretized DAE equations
     g = {g{:}, h*fx - xp, fz};
