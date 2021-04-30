@@ -45,7 +45,8 @@ for k = 1:methods.Count
     for i=1:length(allFiles)
         load(allFiles(i).folder + "/" + allFiles(i).name)
         
-        w_opt_vec = w_opt_vec(2,:)';
+        % We are only interested in x0
+        w_opt_vec = w_opt_vec(1,:)';
         
         for j = 1:length(varNames)
             c(varNames(j)) = [c(varNames(j)) eval(varNames(j))];
@@ -106,11 +107,8 @@ L = zeros(length(x), 1);
 T = 2;
 for i = 1:length(x)
     x0 = x(i);
-    ts = -x0/3;
-    
-    c0 = (T+(x0-5)/3)^2;
-    c1 = 8/3*ts^3 +8/3*x0*ts^2 + 8/9*x0^2*ts +1/3*T^3+1/3*x0*T^2+x0^2*T/9;
-    L(i) = c0 + c1;    
+    ts = -x0/3;    
+    L(i) = 3*ts^3 + 1/3*(2 - ts)^3 + (T+(x0-5)/3)^2;
 end
 
 % Get optimal x0*
@@ -192,3 +190,5 @@ PrintValues(plotStructs, methodLegendEntries, "x0_diff");
 PrintValues(plotStructs, methodLegendEntries, "compl_vals");
 
 end
+
+
