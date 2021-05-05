@@ -6,7 +6,7 @@ This benchmark was used for demonstration [in this paper](https://arxiv.org/abs/
 This is a simple MATLAB benchmark created under Ubuntu with the following prerequisits:
 
 - Install CasADi for MATLAB (https://web.casadi.org/).
-- Install the qpOASES MATLAB interface (https://github.com/coin-or/qpOASES).
+- Install the qpOASES 3.2.0 MATLAB interface (https://github.com/coin-or/qpOASES).
 - Adjust the casadi path in the file `RunBenchmark.m`.
 - Adjust the qpOASES MATLAB interface path in the file `RunBenchmark.m`.
 
