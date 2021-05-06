@@ -1,4 +1,4 @@
-function [ primalSteps, dualSteps, fVals, RVals, exitflag, auxOutput ] = LCQP(Q, g, A, lb, ub, lbA, ubA, L, R, params)
+function [ primalSteps, dualSteps, fVals, RVals, exitflag, auxOutput, iter, k ] = LCQP(Q, g, A, lb, ub, lbA, ubA, L, R, params)
 %% Input Consistency
 [nx, nc, ncomp] = PerformInputConsistencyTest(Q, g, A, lb, ub, lbA, ubA, L, R);
 
@@ -24,7 +24,7 @@ if (isfield(params, 'stationarityTolerance'))
 end
 
 % Initial starting point
-xk = zeros(size(nx,1));
+xk = zeros(nx,1);
 if (isfield(params, 'x0'))
     % Initialize primals
     xk = params.x0;
@@ -85,10 +85,18 @@ if (isfield(params, 'useSparseMatrices'))
     assert(islogical(useSparseMatrices));
 end
 
+% Perform gradient perturbation method
 useGradientPerturbation = false;
 if (isfield(params, 'useGradientPerturbation'))
     useGradientPerturbation = params.useGradientPerturbation;
     assert(islogical(useGradientPerturbation));
+end
+
+% Retrieve stationarity type, i.e. S, M, C, W 
+retrieveStationarityType = false;
+if (isfield(params, 'retrieveStationarityType'))
+    retrieveStationarityType = params.retrieveStationarityType;
+    assert(islogical(retrieveStationarityType));
 end
 
 %% Data preperation
@@ -148,7 +156,7 @@ dualSteps = [];
 
 %% Initiate qpOASES homotopy
 if (solveZeroPenaltyFirst)
-    [QP,xk,~,exitflag,iterQPO,lk,auxOutput] = qpOASES_sequence('i', Q, g, A, lb, ub, lbA, ubA, options, params.x0);
+    [QP,xk,~,exitflag,iterQPO,lk,auxOutput] = qpOASES_sequence('i', Q, g, A, lb, ub, lbA, ubA, options, xk);
 else
     [QP,xk,~,exitflag,iterQPO,lk,auxOutput] = qpOASES_sequence('i', Q, g + Rk*grad_phi(xk), A, lb, ub, lbA, ubA, options);
 end
@@ -199,7 +207,7 @@ while ( true )
     
     % Need this alternative stationarity check due to qpOASES termination
     % criterion
-    if (stat <= options.terminationTolerance*50)
+    if (stat <= stationarityTolerance)
         if (Rk > Rbreak)
             fprintf("Exceeded maximum penalty value!\n"); 
             qpOASES_sequence('c', QP);
@@ -214,7 +222,9 @@ while ( true )
             lk(L_indices) = lk(L_indices) - Rk*R*xk;
             lk(R_indices) = lk(R_indices) - Rk*L*xk;         
             
-            % GetStationarityType(xk, lk, L, R, L_indices, R_indices, complementarityTolerance);
+            if (retrieveStationarityType)
+                GetStationarityType(xk, lk, L, R, L_indices, R_indices, complementarityTolerance);
+            end
             
             return;
         end
