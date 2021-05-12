@@ -1,0 +1,3 @@
+[submodule "LCQP"]
+	path = LCQP
+	url = git@github.com:hallfjonas/LCQP.git
