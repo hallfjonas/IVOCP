@@ -2,8 +2,8 @@ close all; clear all; clc;
 
 %% Add required paths
 % Adjust CasADi and qpOASES path to your local settings:
-addpath("~/Documents/MATLAB/casadi-linux-matlabR2014b-v3.5.5");
-addpath("~/Documents/qpOASES/3.2/interfaces/matlab");
+addpath("~/casadi-matlab2014b-v3.5.5");
+addpath("~/qpOASES/interfaces/matlab");
 
 % Shipped directories
 addpath("LCQP");
