@@ -256,11 +256,11 @@ if (mpcc_mode == 1 || mpcc_mode == 2)
         
     % LCQP parameters
     params.x0 = w0;
-    params.R0 = rho_vals(2);
+    params.initialPenaltyParameter = rho_vals(2);
     params.solveZeroPenaltyFirst = true;
-    params.penaltyUpdater = @(R) rho_vals(3)/rho_vals(2)*R;
-    params.maxIter = 1000;
-    params.printStats = false;
+    params.penaltyUpdateFactor = rho_vals(3)/rho_vals(2);
+    params.maxIterations = 1000;
+    params.printLevel = 0;
     params.Rbreak = rho_vals(end);
     
     if (mpcc_mode == 2)
@@ -273,7 +273,6 @@ else
     opts_ipopt.print_time = 0;
     opts_ipopt.print_out = 0;
     prob = struct('f', J, 'x', x, 'g', constr, 'p', sigma);
-    solver = nlpsol('solver', 'ipopt', prob, opts_ipopt);
 end
 
 % Solution vectors 
