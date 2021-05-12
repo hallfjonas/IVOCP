@@ -295,7 +295,7 @@ for i = 1:nxsamples
     if (mpcc_mode == 1 || mpcc_mode == 2)
         % Solve using LCQP
         tic;
-        w_opt = LCQP(Q, g, A, lbw, ubw, lbg, ubg, S1, S2, params);
+        w_opt = LCQP(Q, g, S1, S2, A, lbg, ubg, lbw, ubw, params);
         time_vals(i) = toc;
     else
         % Solve using IPOPT
